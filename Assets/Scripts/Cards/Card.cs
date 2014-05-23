@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace Assets.Scripts.Cards
 {
@@ -8,7 +9,7 @@ namespace Assets.Scripts.Cards
         {
             Rank = rank;
             Suit = suit;
-            Name = rank.ToString() + " of " + Suit.ToString();
+            Name = rank + " of " + Suit;
             BackTexture = new Texture2D(10,10);
             FrontTexture = new Texture2D(10,10);
         }
@@ -23,9 +24,19 @@ namespace Assets.Scripts.Cards
         
         public bool FacingUp { get; private set; }
 
-        void Flip()
+        public void Flip()
         {
             FacingUp = !FacingUp;
+        }
+
+        public void SetFaceUp()
+        {
+            FacingUp = true;
+        }
+
+        public void SetFaceDown()
+        {
+            FacingUp = false;
         }
 
         public enum CardSuit

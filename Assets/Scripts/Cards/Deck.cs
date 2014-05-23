@@ -8,7 +8,9 @@ namespace Assets.Scripts.Cards
     public class Deck : MonoBehaviour
     {
 
-        public List<Card> Cards { get; private set; }  
+        public List<Card> Cards { get; private set; }
+        public int CardsLeft { get { return Cards.Count; } }
+
 
         // Use this for initialization
         void Start () {
@@ -27,9 +29,20 @@ namespace Assets.Scripts.Cards
 	
         }
 
-        void Shuffle()
+        public void Shuffle()
         {
-            Util.Shuffle(Cards);
+            Cards.Shuffle();
+        }
+
+        public CardObject GetTopCard()
+        {
+            if(CardsLeft > 0)
+            {
+                var cardFromTop = Cards.Pop();
+                var card = new CardObject();
+                card.SetCard(cardFromTop);
+                return card;
+            }
         }
 
     }
