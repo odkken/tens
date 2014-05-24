@@ -49,6 +49,7 @@
      <Compile Include="Assets\Scripts\Cards\Card.cs" />
      <Compile Include="Assets\Scripts\Cards\Deck.cs" />
      <Compile Include="Assets\Scripts\Common\Util.cs" />
+     <Compile Include="Assets\Scripts\Game\HandArea.cs" />
      <Compile Include="Assets\Scripts\Game\Player.cs" />
      <Compile Include="Assets\Scripts\Game\TableArea.cs" />
      <Compile Include="Assets\Scripts\Game\TensRules.cs" />

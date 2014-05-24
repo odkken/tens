@@ -24,6 +24,7 @@ namespace Assets.Scripts.Game
             deck = FindObjectOfType<Deck>();
             _bottomCards = new List<Card>();
             _topCards = new List<Card>();
+            VerticalOffset *= transform.position.y < 0 ? 1 : -1;
         }
 
         // Update is called once per frame

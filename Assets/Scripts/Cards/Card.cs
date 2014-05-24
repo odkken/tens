@@ -17,10 +17,12 @@ namespace Assets.Scripts.Cards
 
         private bool _flipping;
         private bool _moving;
+        private bool _rotating;
         void Start()
         {
             _flipping = false;
             _moving = false;
+            _rotating = false;
         }
 
         void Update()
@@ -101,6 +103,26 @@ namespace Assets.Scripts.Cards
             }
             transform.position = newPosition;
             _moving = false;
+        }
+
+        public void RotateTo(float angle)
+        {
+            if (!_rotating)
+                StartCoroutine(AnimateRotate(angle, AnimTime));
+        }
+        IEnumerator AnimateRotate(float to, float flipTime)
+        {
+            _rotating = true;
+            var startAngle = transform.rotation.eulerAngles.z;
+            var time = 0f;
+            while (time < 1)
+            {
+                time += Time.deltaTime / flipTime;
+                transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(startAngle, to, 1 - Mathf.Log10(time * 9 + 1)));
+                yield return null;
+            }
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, to);
+            _rotating = false;
         }
 
         public enum CardSuit
