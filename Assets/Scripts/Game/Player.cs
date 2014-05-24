@@ -7,16 +7,16 @@ namespace Assets.Scripts.Game
 {
     public class Player : MonoBehaviour
     {
-        private List<CardObject> cardsInHand;
-        private List<CardObject> cardsOnTable;
+        private List<Card> cardsInHand;
+        private List<Card> cardsOnTable;
 
-        public List<CardObject> AllCards { get { return cardsInHand.Concat(cardsOnTable).ToList(); } }
+        public List<Card> AllCards { get { return cardsInHand.Concat(cardsOnTable).ToList(); } }
 
         // Use this for initialization
         void Start()
         {
-            cardsInHand = new List<CardObject>();
-            cardsOnTable = new List<CardObject>();
+            cardsInHand = new List<Card>();
+            cardsOnTable = new List<Card>();
         }
 
         // Update is called once per frame
@@ -25,7 +25,7 @@ namespace Assets.Scripts.Game
 
         }
 
-        public void GiveCard(CardObject card, bool inHand)
+        public void GiveCard(Card card, bool inHand)
         {
             if (inHand)
                 cardsInHand.Add(card);

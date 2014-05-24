@@ -1,42 +1,106 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
 using UnityEngine;
-
+using Assets.Scripts.Cards;
+using System.Collections;
 namespace Assets.Scripts.Cards
 {
-    public class Card
+    public class Card : MonoBehaviour
     {
-        public Card(CardRank rank, CardSuit suit)
+
+        public static float AnimTime = .5f;
+        public bool IsFaceUp { get { return Vector3.Dot(transform.forward, Vector3.forward) > 0; } }
+
+        public CardSuit Suit { get; private set; }
+        public CardRank Rank { get; private set; }
+
+        public string Name { get; private set; }
+
+        private bool _flipping;
+        private bool _moving;
+        void Start()
+        {
+            _flipping = false;
+            _moving = false;
+        }
+
+        void Update()
+        {
+        }
+
+        public void SetInfo(CardRank rank, CardSuit suit)
         {
             Rank = rank;
             Suit = suit;
-            Name = rank + " of " + Suit;
-            BackTexture = new Texture2D(10,10);
-            FrontTexture = new Texture2D(10,10);
-        }
+            var rankChar = "";
+            if ((int)rank < 9)
+                rankChar = ((int)rank + 2).ToString();
+            else
+            {
+                switch ((int)rank)
+                {
+                    case 9:
+                        rankChar = "J";
+                        break;
+                    case 10:
+                        rankChar = "Q";
+                        break;
+                    case 11:
+                        rankChar = "K";
+                        break;
+                    case 12:
+                        rankChar = "A";
+                        break;
+                }
+            }
 
-        public Texture2D BackTexture { get; private set; }
-        public Texture2D FrontTexture { get; private set; }
-        
-        public CardSuit Suit { get; private set; }
-        public CardRank Rank { get; private set; }
-        
-        public string Name { get; private set; }
-        
-        public bool FacingUp { get; private set; }
+            var cardString = "card" + suit + rankChar;
+            var frontSprite = Resources.Load<Sprite>("Cards/" + cardString);
+            if (frontSprite == null)
+                throw new Exception("Couldn't load " + cardString);
+            transform.FindChild("Front").GetComponent<SpriteRenderer>().sprite = frontSprite;
+        }
 
         public void Flip()
         {
-            FacingUp = !FacingUp;
+            if (!_flipping)
+                StartCoroutine(AnimateFlip(AnimTime));
         }
 
-        public void SetFaceUp()
+        IEnumerator AnimateFlip(float flipTime)
         {
-            FacingUp = true;
+            _flipping = true;
+            var startAngle = transform.rotation.eulerAngles.y;
+            var endAngle = startAngle - 180;
+            var time = 0f;
+            while (time < 1)
+            {
+                time += Time.deltaTime / flipTime;
+                transform.rotation = Quaternion.Euler(0, Mathf.Lerp(startAngle, endAngle, Mathf.Pow(time, 2)), 0);
+                yield return null;
+            }
+            transform.rotation = Quaternion.Euler(0, endAngle, 0);
+            _flipping = false;
         }
 
-        public void SetFaceDown()
+        public void MoveTo(Vector3 to)
         {
-            FacingUp = false;
+            if (!_moving)
+                StartCoroutine(AnimateMove(to, AnimTime));
+        }
+
+        IEnumerator AnimateMove(Vector3 newPosition, float flipTime)
+        {
+            _moving = true;
+            var startPos = transform.position;
+            var time = 0f;
+            while (time < 1)
+            {
+                time += Time.deltaTime / flipTime;
+                transform.position = Vector3.Lerp(startPos, newPosition, Mathf.Pow(time, 2));
+                yield return null;
+            }
+            transform.position = newPosition;
+            _moving = false;
         }
 
         public enum CardSuit
