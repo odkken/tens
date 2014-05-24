@@ -1,0 +1,9 @@
+C:\Users\John\Documents\tens\Temp\UnityVS_bin\Debug\Assembly-CSharp.dll
+C:\Users\John\Documents\tens\Temp\UnityVS_bin\Debug\Assembly-CSharp.pdb
+C:\Users\John\Documents\tens\Temp\UnityVS_bin\Debug\UnityEditor.dll
+C:\Users\John\Documents\tens\Temp\UnityVS_bin\Debug\UnityEngine.dll
+C:\Users\John\Documents\tens\Temp\UnityVS_bin\Debug\UnityEngine.xml
+C:\Users\John\Documents\tens\Temp\UnityVS_bin\Debug\UnityEditor.xml
+C:\Users\John\Documents\tens\obj\Debug\UnityVS.tens.CSharp.csprojResolveAssemblyReference.cache
+C:\Users\John\Documents\tens\obj\Debug\Assembly-CSharp.dll
+C:\Users\John\Documents\tens\obj\Debug\Assembly-CSharp.pdb
