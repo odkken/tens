@@ -6,11 +6,11 @@ namespace Assets.Scripts.Game
 {
     public class TableArea : MonoBehaviour
     {
-        public float HorizontalSpacing = 2f;
-        public float VerticalOffset = .2f;
+        private float _horizontalSpacing = 1.7f;
+        private float _verticalOffset = .2f;
 
-        public float FaceDownZPos = -.1f;
-        public float FaceUpZPos = -.2f;
+        private const float FaceDownZPos = -.1f;
+        private const float FaceUpZPos = -.2f;
 
         private List<Card> _bottomCards;
         private List<Card> _topCards;
@@ -24,7 +24,8 @@ namespace Assets.Scripts.Game
             deck = FindObjectOfType<Deck>();
             _bottomCards = new List<Card>();
             _topCards = new List<Card>();
-            VerticalOffset *= transform.position.y < 0 ? 1 : -1;
+            _verticalOffset *= transform.position.y < 0 ? 1 : -1;
+            _horizontalSpacing *= transform.position.y < 0 ? 1 : -1;
         }
 
         // Update is called once per frame
@@ -44,7 +45,7 @@ namespace Assets.Scripts.Game
             if (_bottomCards.Count < 5)
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);
-                card.MoveTo(transform.position + new Vector3(HorizontalSpacing * (-2 + _bottomCards.Count), VerticalOffset / 2, FaceDownZPos));
+                card.MoveTo(transform.position + new Vector3(_horizontalSpacing * (-1 + _bottomCards.Count), _verticalOffset / 2, FaceDownZPos));
                 _bottomCards.Add(card);
                 card.transform.parent = transform;
             }
@@ -52,7 +53,7 @@ namespace Assets.Scripts.Game
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);
                 card.Flip();
-                card.MoveTo(transform.position + new Vector3(HorizontalSpacing * (-2 + _topCards.Count), -VerticalOffset / 2, FaceUpZPos));
+                card.MoveTo(transform.position + new Vector3(_horizontalSpacing * (-1 + _topCards.Count), -_verticalOffset / 2, FaceUpZPos));
                 _topCards.Add(card);
                 card.transform.parent = transform;
             }

@@ -30,6 +30,7 @@ namespace Assets.Scripts.Cards
                         Cards.Add(card);
                         card.transform.position = transform.position + new Vector3(0, 0, -CardSpacing * Cards.Count);
                         card.transform.parent = transform;
+                        card.transform.rotation = Quaternion.Euler(card.transform.eulerAngles.x, card.transform.eulerAngles.y, UnityEngine.Random.Range(0f, 1f) > .5 ? 180 : 0);
                     }
                 }
             }

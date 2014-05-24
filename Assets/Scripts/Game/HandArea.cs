@@ -7,10 +7,10 @@ namespace Assets.Scripts.Game
 {
     public class HandArea : MonoBehaviour
     {
-        private float PositionalRandomness = .5f;
-        public float RotationalRandomness = 1;
+        private const float PositionalRandomness = .5f;
+        private const float RotationalRandomness = .1f;
 
-        public float DepthSpacing = .1f;
+        private const float DepthSpacing = .1f;
 
         private List<Card> _handCards;
 
@@ -42,7 +42,7 @@ namespace Assets.Scripts.Game
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);
                 card.MoveTo(transform.position + new Vector3(Util.NextGaussian(PositionalRandomness), Util.NextGaussian(PositionalRandomness), -_handCards.Count * DepthSpacing));
-                card.RotateTo(Util.NextGaussian(RotationalRandomness) * 360);
+                card.RotateTo(Util.NextGaussian(RotationalRandomness) * 180);
                 _handCards.Add(card);
                 card.transform.parent = transform;
             }

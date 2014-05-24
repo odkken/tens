@@ -77,10 +77,10 @@ namespace Assets.Scripts.Cards
             while (time < 1)
             {
                 time += Time.deltaTime / flipTime;
-                transform.rotation = Quaternion.Euler(0, Mathf.Lerp(startAngle, endAngle, Mathf.Pow(time, 2)), 0);
+                transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, Mathf.Lerp(startAngle, endAngle, Mathf.Pow(time, 2)), transform.rotation.eulerAngles.z);
                 yield return null;
             }
-            transform.rotation = Quaternion.Euler(0, endAngle, 0);
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, endAngle, transform.rotation.eulerAngles.z);
             _flipping = false;
         }
 
