@@ -14,7 +14,7 @@ namespace Assets.Scripts.Cards
         public GameObject TemplateCard;
         public List<Card> Cards { get; private set; }
         public int CardsLeft { get { return Cards.Count; } }
-        public float DealTime = 10f;
+        public float DealTime = 1f;
         private const float CardSpacing = .01f;
         public bool Dealing { get; private set; }
 

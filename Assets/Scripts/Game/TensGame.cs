@@ -36,7 +36,7 @@ namespace Assets.Scripts.Game
                 var player = Instantiate(PlayerTemplate);
             }
             Instance = gameObject.GetComponent<TensGame>();
-            Deck = Instantiate(DeckTemplate, new Vector3(0, 0, -2), Quaternion.identity) as Deck;
+            Deck = Instantiate(DeckTemplate, new Vector3(-8, 0, -2), Quaternion.identity) as Deck;
         }
 
         void Update()

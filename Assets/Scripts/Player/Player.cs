@@ -18,8 +18,8 @@ namespace Assets.Scripts.Player
         public int Number;
         public bool HasPickedUpCards { get; private set; }
 
-        public float HandSpread = 1;
-        public float HandArc = -5;
+        public float HandSpread = .7f;
+        public float HandRotation = 2;
 
         public bool CanAddMore { get { return Hand.CanAddMore || Table.CanAddMore; } }
 
@@ -76,12 +76,17 @@ namespace Assets.Scripts.Player
 
             for (int i = 0; i < Hand.Cards.Count; i++)
             {
-                var targetPos = Hand.transform.position + new Vector3(HandSpread * (-4.5f + i), -HandArc * (Mathf.Pow(.1f * (i - 4.5f), 2)), -i);
-                var targetRot = HandArc * (4.5f - i);
+                var straightLinePos = Hand.transform.position + new Vector3(HandSpread * (-4.5f + i), 0, -(i + .5f));
+                var dummyTransform = Instantiate(gameObject.transform) as Transform;
+                dummyTransform.position = straightLinePos;
+                dummyTransform.RotateAround(Hand.transform.position, Vector3.forward, HandSpread * (4.5f - i));
+                var targetRot = HandRotation * (4.5f - i);
                 var thisCard = Hand.Cards[i];
                 thisCard.Flip();
-                thisCard.RotateTo(targetRot, true);
-                thisCard.MoveTo(targetPos);
+                thisCard.RotateTo(dummyTransform.rotation.eulerAngles.z * HandRotation, true);
+                thisCard.MoveTo(dummyTransform.position);
+
+                Destroy(dummyTransform.gameObject);
             }
             HasPickedUpCards = true;
         }

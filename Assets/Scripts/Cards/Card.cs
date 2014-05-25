@@ -3,11 +3,12 @@ using Assets.Scripts.Game;
 using UnityEngine;
 using Assets.Scripts.Cards;
 using System.Collections;
+
 namespace Assets.Scripts.Cards
 {
     public class Card : MonoBehaviour
     {
-
+        public static float AnimTimeout = 20;
         public static float AnimTime = .5f;
         public bool IsFaceUp { get { return Vector3.Dot(transform.forward, Vector3.forward) > 0; } }
 
@@ -163,6 +164,35 @@ namespace Assets.Scripts.Cards
                 }
             }
             Rotating = false;
+        }
+
+        public void RotateAroundTo(float angle, Vector3 zAxisCoords)
+        {
+            if (!Moving)
+                StartCoroutine(AnimateRotateAround(angle, zAxisCoords, AnimTime));
+        }
+        IEnumerator AnimateRotateAround(float to, Vector3 zAxisCoords, float flipTime)
+        {
+            var startTime = Time.time;
+            while (Moving || Flipping || Rotating)
+            {
+                if(Time.time - startTime > AnimTimeout)
+                    yield break;
+                yield return null;
+            }
+            Moving = true;
+            var time = 0f;
+            var vectorFromAxisToSelf = transform.position - zAxisCoords;
+            vectorFromAxisToSelf.z = 0;
+            var startAngle = Vector3.Angle(Vector3.right, vectorFromAxisToSelf);
+            var delta = to - startAngle;
+            while (time < 1)
+            {
+                time += Time.deltaTime / flipTime;
+                transform.RotateAround(zAxisCoords, Vector3.up, delta * time);
+                yield return null;
+            }
+            Moving = false;
         }
 
         public enum CardSuit
