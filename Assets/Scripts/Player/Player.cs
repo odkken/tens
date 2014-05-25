@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Cards;
 using Assets.Scripts.Game;
+using Assets.Scripts.Common;
 using UnityEngine;
 
 namespace Assets.Scripts.Player
@@ -51,20 +52,35 @@ namespace Assets.Scripts.Player
         {
             var suitedCards = Hand.Cards.GroupBy(a => a.Suit).Select(a => a.ToList()).ToList();
             suitedCards.Sort((a, b) => a[0].Suit.CompareTo(b[0].Suit));
+            if (suitedCards.Count == 3)
+            {
+                if ((suitedCards[2].First().Suit - suitedCards[0].First().Suit)%2 != 0)
+                {
+                    suitedCards.Swap(0,1);
+                }
+
+                //if the first swap didn't put the right one in the center
+                if ((suitedCards[2].First().Suit - suitedCards[0].First().Suit) % 2 != 0)
+                {
+                    suitedCards.Swap(1, 2);
+                }
+            }
+
             Hand.Cards = new List<Card>();
             foreach (var suit in suitedCards)
             {
-                suit.Sort((a,b) => a.Rank.CompareTo(b.Rank));
+                suit.Sort((a, b) => a.Rank.CompareTo(b.Rank));
                 Hand.Cards.AddRange(suit);
             }
 
+
             for (int i = 0; i < Hand.Cards.Count; i++)
             {
-                var targetPos = Hand.transform.position + new Vector3(HandSpread * (-4.5f + i), -HandArc * (Mathf.Pow(.1f*(i-4.5f),2)), -i);
-                var targetRot = HandArc*(4.5f - i);
+                var targetPos = Hand.transform.position + new Vector3(HandSpread * (-4.5f + i), -HandArc * (Mathf.Pow(.1f * (i - 4.5f), 2)), -i);
+                var targetRot = HandArc * (4.5f - i);
                 var thisCard = Hand.Cards[i];
                 thisCard.Flip();
-                thisCard.RotateTo(targetRot);
+                thisCard.RotateTo(targetRot, true);
                 thisCard.MoveTo(targetPos);
             }
             HasPickedUpCards = true;

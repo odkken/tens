@@ -20,11 +20,12 @@ namespace Assets.Scripts.Game
         [HideInInspector]
         public List<Player.Player> AllPlayers;
 
+        public Deck DeckTemplate;
+
+        [HideInInspector]
         public Deck Deck;
 
-        private TensGame _instance;
-
-        public TensGame Instance { get { return _instance; } }
+        public static TensGame Instance { get; private set; }
 
         public static GameState CurrentState = GameState.Deal;
 
@@ -34,12 +35,13 @@ namespace Assets.Scripts.Game
             {
                 var player = Instantiate(PlayerTemplate);
             }
-            _instance = transform.GetComponent<TensGame>();
+            Instance = gameObject.GetComponent<TensGame>();
+            Deck = Instantiate(DeckTemplate, new Vector3(0, 0, -2), Quaternion.identity) as Deck;
         }
 
         void Update()
         {
-            
+
         }
 
     }

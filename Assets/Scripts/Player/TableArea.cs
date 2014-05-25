@@ -21,8 +21,6 @@ namespace Assets.Scripts.Player
 
         public bool CanAddMore { get { return _topCards.Count < 5; } }
 
-        private Deck _deck;
-        public Deck Deck { get { return _deck ?? (_deck = FindObjectOfType<Deck>()); } }
         void Start()
         {
             _bottomCards = new List<Card>();
@@ -41,8 +39,8 @@ namespace Assets.Scripts.Player
             switch (TensGame.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    if (CanAddMore && !Deck.Dealing)
-                        AddCard(Deck.GetTopCard());
+                    if (CanAddMore && !TensGame.Instance.Deck.Dealing)
+                        AddCard(TensGame.Instance.Deck.GetTopCard());
                     break;
                 case TensGame.GameState.Bid:
                     break;

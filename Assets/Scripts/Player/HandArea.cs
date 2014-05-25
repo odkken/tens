@@ -19,13 +19,7 @@ namespace Assets.Scripts.Player
 
         public List<Card> Cards;
         public bool CanAddMore { get { return Cards.Count < 10; } }
-
-        private Deck _deck;
-        public Deck Deck
-        {
-            get { return _deck ?? (_deck = FindObjectOfType<Deck>()); }
-        }
-
+        
         void Start()
         {
             Cards = new List<Card>();
@@ -42,8 +36,8 @@ namespace Assets.Scripts.Player
             switch (TensGame.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    if (CanAddMore && !Deck.Dealing)
-                        AddCard(Deck.GetTopCard());
+                    if (CanAddMore && !TensGame.Instance.Deck.Dealing)
+                        AddCard(TensGame.Instance.Deck.GetTopCard());
                     break;
                 case TensGame.GameState.Bid:
                     if (!Player.HasPickedUpCards && !Cards.Any(a=> a.Moving))
@@ -64,7 +58,7 @@ namespace Assets.Scripts.Player
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);
                 card.MoveTo(transform.position + new Vector3(Util.NextGaussian(PositionalRandomness), Util.NextGaussian(PositionalRandomness), -Cards.Count * DepthSpacing));
-                card.RotateTo(Util.NextGaussian(RotationalRandomness) * 180);
+                card.RotateTo(Util.NextGaussian(RotationalRandomness) * 180, false);
                 Cards.Add(card);
                 card.transform.parent = transform;
             }

@@ -11,7 +11,7 @@ namespace Assets.Scripts.Cards
 {
     public class Deck : MonoBehaviour
     {
-        public Card TemplateCard;
+        public GameObject TemplateCard;
         public List<Card> Cards { get; private set; }
         public int CardsLeft { get { return Cards.Count; } }
         public float DealTime = 10f;
@@ -58,7 +58,7 @@ namespace Assets.Scripts.Cards
                 {
                     foreach (Card.CardSuit suit in Enum.GetValues(typeof(Card.CardSuit)))
                     {
-                        var card = Instantiate(TemplateCard) as Card;
+                        var card = Instantiate(TemplateCard.GetComponent<Card>()) as Card;
                         card.SetInfo(rank, suit);
                         Cards.Add(card);
                         card.transform.position = transform.position + new Vector3(0, 0, -CardSpacing * Cards.Count);

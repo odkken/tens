@@ -34,6 +34,13 @@ namespace Assets.Scripts.Common
             theList.Add(item);
         }
 
+        public static void Swap<T>(this IList<T> theList, int indexA, int indexB)
+        {
+            var tmp = theList[indexA];
+            theList[indexA] = theList[indexB];
+            theList[indexB] = tmp;
+        }
+
         public static float NextGaussian(float stdDev, float mean = 0)
         {
             if(rand == null)

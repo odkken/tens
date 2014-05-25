@@ -16,7 +16,7 @@ namespace Assets.Scripts.Cards
 
         public string Name { get; private set; }
 
-        private Vector3 InitClickOffset;
+        private Vector3 _initClickOffset;
 
         public bool Flipping { get; private set; }
         public bool Moving { get; private set; }
@@ -35,20 +35,22 @@ namespace Assets.Scripts.Cards
         void OnMouseDown()
         {
             if (!IsFaceUp) return;
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            Physics.Raycast(ray, out hit);
-            InitClickOffset = hit.point - Camera.main.WorldToScreenPoint(transform.position);
+            _initClickOffset = Input.mousePosition - Camera.main.WorldToScreenPoint(transform.position);
+            RotateTo(Mathf.Abs(transform.rotation.eulerAngles.z - 180) < 90 ? 180 : 0, true);
         }
 
         void OnMouseDrag()
         {
             if (!IsFaceUp) return;
-            var ray = Input.mousePosition;
-            RaycastHit hit;
-            Physics.Raycast(ray, out hit);
-            if (hit.collider.transform == transform)
-                transform.position = hit.point - InitClickOffset;
+            Moving = true;
+            var newPos = Camera.main.ScreenToWorldPoint(Input.mousePosition - _initClickOffset);
+            newPos.z = transform.position.z;
+            transform.position = newPos;
+        }
+
+        void OnMouseUp()
+        {
+            Moving = false;
         }
 
 
@@ -128,21 +130,37 @@ namespace Assets.Scripts.Cards
             Moving = false;
         }
 
-        public void RotateTo(float angle)
+        public void RotateTo(float angle, bool shortestPath)
         {
             if (!Rotating)
-                StartCoroutine(AnimateRotate(angle, AnimTime));
+                StartCoroutine(AnimateRotate(angle, AnimTime, shortestPath));
         }
-        IEnumerator AnimateRotate(float to, float flipTime)
+        IEnumerator AnimateRotate(float to, float flipTime, bool shortestPath)
         {
             Rotating = true;
-            var startAngle = transform.rotation.eulerAngles.z;
             var time = 0f;
-            while (time < 1)
+
+            if (shortestPath)
             {
-                time += Time.deltaTime / flipTime;
-                transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(startAngle, to, Mathf.Log10(time * 9 + 1)));
-                yield return null;
+                var startRot = transform.rotation;
+                var endRot = Quaternion.Euler(startRot.x, startRot.y, to);
+                while (time < 1)
+                {
+                    time += Time.deltaTime / flipTime;
+                    transform.rotation = Quaternion.Slerp(startRot, endRot, Mathf.Log10(time * 9 + 1));
+                    yield return null;
+                }
+            }
+            else
+            {
+                var startAngle = transform.rotation.eulerAngles.z;
+                while (time < 1)
+                {
+                    time += Time.deltaTime / flipTime;
+                    transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x,
+                        transform.rotation.eulerAngles.y, Mathf.Lerp(startAngle, to, Mathf.Log10(time * 9 + 1)));
+                    yield return null;
+                }
             }
             Rotating = false;
         }
