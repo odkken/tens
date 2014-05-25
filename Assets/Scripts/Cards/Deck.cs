@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Game;
+using Assets.Scripts.Player;
 using UnityEngine;
 using Assets.Scripts.Common;
 
@@ -12,12 +14,43 @@ namespace Assets.Scripts.Cards
         public Card TemplateCard;
         public List<Card> Cards { get; private set; }
         public int CardsLeft { get { return Cards.Count; } }
-
-        public float CardSpacing = .01f;
+        public float DealTime = 10f;
+        private const float CardSpacing = .01f;
+        public bool Dealing { get; private set; }
 
         // Use this for initialization
         void Start()
         {
+            Initialize();
+        }
+
+        void Update()
+        {
+
+            switch (TensGame.CurrentState)
+            {
+                case TensGame.GameState.Deal:
+                    if (CardsLeft == 0)
+                    {
+                        TensGame.CurrentState = TensGame.GameState.Bid;
+                        transform.position = new Vector3(-999, -999, -999);
+                    }
+                        
+                    break;
+                case TensGame.GameState.Bid:
+                    break;
+                case TensGame.GameState.HandPlay:
+                    break;
+                case TensGame.GameState.TablePlay:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        void Initialize()
+        {
+            Dealing = false;
             Cards = new List<Card>();
             foreach (Card.CardRank rank in Enum.GetValues(typeof(Card.CardRank)))
             {
@@ -35,25 +68,41 @@ namespace Assets.Scripts.Cards
                 }
             }
             Shuffle();
-
-            //while (CardsLeft > 0)
-            //{
-            //    var card = GetTopCard();
-            //    card.rigidbody.velocity = new Vector3(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f), 0);
-            //}
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
 
         void OnMouseDown()
         {
-            TensRules.Deal(null, null, transform.GetComponent<Deck>());
+            if (TensGame.CurrentState == TensGame.GameState.Deal && !Dealing)
+                Deal();
         }
 
+        private void Deal()
+        {
+            Dealing = true;
+            StartCoroutine(AnimateDeal(DealTime));
+        }
+
+        IEnumerator AnimateDeal(float dealTime)
+        {
+            int dealTo = 0;
+            int totalCards = CardsLeft;
+            var players = FindObjectsOfType<Player.Player>().ToList();
+            while (CardsLeft > 0)
+            {
+                float waitTime = 0;
+                var receivingPlayer = players[dealTo++];
+                if (receivingPlayer.CanAddMore)
+                {
+                    receivingPlayer.GiveCard(GetTopCard());
+                    waitTime = dealTime / totalCards;
+                }
+                if (dealTo == players.Count())
+                    dealTo = 0;
+                yield return new WaitForSeconds(waitTime);
+            }
+            Dealing = false;
+        }
 
         public void Shuffle()
         {

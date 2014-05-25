@@ -1,4 +1,5 @@
 ﻿using System;
+using Assets.Scripts.Game;
 using UnityEngine;
 using Assets.Scripts.Cards;
 using System.Collections;
@@ -15,19 +16,41 @@ namespace Assets.Scripts.Cards
 
         public string Name { get; private set; }
 
-        private bool _flipping;
-        private bool _moving;
-        private bool _rotating;
+        private Vector3 InitClickOffset;
+
+        public bool Flipping { get; private set; }
+        public bool Moving { get; private set; }
+        public bool Rotating { get; private set; }
         void Start()
         {
-            _flipping = false;
-            _moving = false;
-            _rotating = false;
+            Flipping = false;
+            Moving = false;
+            Rotating = false;
         }
 
         void Update()
         {
         }
+
+        void OnMouseDown()
+        {
+            if (!IsFaceUp) return;
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            Physics.Raycast(ray, out hit);
+            InitClickOffset = hit.point - Camera.main.WorldToScreenPoint(transform.position);
+        }
+
+        void OnMouseDrag()
+        {
+            if (!IsFaceUp) return;
+            var ray = Input.mousePosition;
+            RaycastHit hit;
+            Physics.Raycast(ray, out hit);
+            if (hit.collider.transform == transform)
+                transform.position = hit.point - InitClickOffset;
+        }
+
 
         public void SetInfo(CardRank rank, CardSuit suit)
         {
@@ -64,13 +87,13 @@ namespace Assets.Scripts.Cards
 
         public void Flip()
         {
-            if (!_flipping)
+            if (!Flipping)
                 StartCoroutine(AnimateFlip(AnimTime));
         }
 
         IEnumerator AnimateFlip(float flipTime)
         {
-            _flipping = true;
+            Flipping = true;
             var startAngle = transform.rotation.eulerAngles.y;
             var endAngle = startAngle - 180;
             var time = 0f;
@@ -81,48 +104,47 @@ namespace Assets.Scripts.Cards
                 yield return null;
             }
             transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, endAngle, transform.rotation.eulerAngles.z);
-            _flipping = false;
+            Flipping = false;
         }
 
         public void MoveTo(Vector3 to)
         {
-            if (!_moving)
+            if (!Moving)
                 StartCoroutine(AnimateMove(to, AnimTime));
         }
 
         IEnumerator AnimateMove(Vector3 newPosition, float flipTime)
         {
-            _moving = true;
+            Moving = true;
             var startPos = transform.position;
             var time = 0f;
             while (time < 1)
             {
                 time += Time.deltaTime / flipTime;
-                transform.position = Vector3.Lerp(startPos, newPosition, Mathf.Pow(time, 2));
+                transform.position = Vector3.Lerp(startPos, newPosition, Mathf.Log10(time * 9 + 1));
                 yield return null;
             }
             transform.position = newPosition;
-            _moving = false;
+            Moving = false;
         }
 
         public void RotateTo(float angle)
         {
-            if (!_rotating)
+            if (!Rotating)
                 StartCoroutine(AnimateRotate(angle, AnimTime));
         }
         IEnumerator AnimateRotate(float to, float flipTime)
         {
-            _rotating = true;
+            Rotating = true;
             var startAngle = transform.rotation.eulerAngles.z;
             var time = 0f;
             while (time < 1)
             {
                 time += Time.deltaTime / flipTime;
-                transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(startAngle, to, 1 - Mathf.Log10(time * 9 + 1)));
+                transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, Mathf.Lerp(startAngle, to, Mathf.Log10(time * 9 + 1)));
                 yield return null;
             }
-            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, to);
-            _rotating = false;
+            Rotating = false;
         }
 
         public enum CardSuit

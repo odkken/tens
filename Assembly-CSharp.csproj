@@ -49,11 +49,11 @@
      <Compile Include="Assets\Scripts\Cards\Card.cs" />
      <Compile Include="Assets\Scripts\Cards\Deck.cs" />
      <Compile Include="Assets\Scripts\Common\Util.cs" />
-     <Compile Include="Assets\Scripts\Game\HandArea.cs" />
-     <Compile Include="Assets\Scripts\Game\Player.cs" />
-     <Compile Include="Assets\Scripts\Game\TableArea.cs" />
-     <Compile Include="Assets\Scripts\Game\TensRules.cs" />
+     <Compile Include="Assets\Scripts\Game\TensGame.cs" />
      <Compile Include="Assets\Scripts\Network\Server.cs" />
+     <Compile Include="Assets\Scripts\Player\HandArea.cs" />
+     <Compile Include="Assets\Scripts\Player\Player.cs" />
+     <Compile Include="Assets\Scripts\Player\TableArea.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
