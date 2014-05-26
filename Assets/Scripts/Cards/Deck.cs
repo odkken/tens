@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Game;
+using Assets.Scripts.Network;
 using Assets.Scripts.Player;
 using UnityEngine;
 using Assets.Scripts.Common;
@@ -17,25 +18,31 @@ namespace Assets.Scripts.Cards
         public float DealTime = 1f;
         private const float CardSpacing = .01f;
         public bool Dealing { get; private set; }
+        public bool DoneDealing { get; private set; }
+        private TensGame game;
+
+        public Player.Player Dealer { get; private set; }
 
         // Use this for initialization
         void Start()
         {
             Initialize();
+            game = FindObjectOfType<TensGame>();
         }
 
         void Update()
         {
 
-            switch (TensGame.CurrentState)
+            switch (game.CurrentState)
             {
                 case TensGame.GameState.Deal:
                     if (CardsLeft == 0)
                     {
-                        TensGame.CurrentState = TensGame.GameState.Bid;
                         transform.position = new Vector3(-999, -999, -999);
+                        Dealing = false;
+                        DoneDealing = true;
                     }
-                        
+
                     break;
                 case TensGame.GameState.Bid:
                     break;
@@ -50,15 +57,17 @@ namespace Assets.Scripts.Cards
 
         void Initialize()
         {
+            if (!networkView.isMine) return;
             Dealing = false;
             Cards = new List<Card>();
-            foreach (Card.CardRank rank in Enum.GetValues(typeof(Card.CardRank)))
+            foreach (CardRank rank in Enum.GetValues(typeof(CardRank)))
             {
                 if ((int)rank > 2)
                 {
-                    foreach (Card.CardSuit suit in Enum.GetValues(typeof(Card.CardSuit)))
+                    foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
                     {
-                        var card = Instantiate(TemplateCard.GetComponent<Card>()) as Card;
+                        var card = UnityEngine.Network.Instantiate(TemplateCard.GetComponent<Card>(), transform.position, transform.rotation, 0) as Card;
+                        Debug.Log(networkView.isMine);
                         card.SetInfo(rank, suit);
                         Cards.Add(card);
                         card.transform.position = transform.position + new Vector3(0, 0, -CardSpacing * Cards.Count);
@@ -73,7 +82,7 @@ namespace Assets.Scripts.Cards
 
         void OnMouseDown()
         {
-            if (TensGame.CurrentState == TensGame.GameState.Deal && !Dealing)
+            if (game.CurrentState == TensGame.GameState.Deal && !Dealing && networkView.isMine)
                 Deal();
         }
 
@@ -111,14 +120,6 @@ namespace Assets.Scripts.Cards
             {
                 Cards[i].transform.position = transform.position + new Vector3(0, 0, -CardSpacing * i);
             }
-        }
-
-        public void ScrapCard(Card.CardRank rank, Card.CardSuit suit)
-        {
-            var card = Cards.FirstOrDefault(a => a.Rank == rank && a.Suit == suit);
-            if (card == null) return;
-            Cards.Remove(card);
-            Destroy(card);
         }
 
         public Card GetTopCard()

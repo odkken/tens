@@ -17,6 +17,17 @@ namespace Assets.Scripts.Player
 
         public Player Player { get; private set; }
 
+        private TensGame game;
+
+        private Deck _deck;
+        private Deck Deck
+        {
+            get
+            {
+                if (_deck == null) _deck = FindObjectOfType<Deck>();
+                return _deck;
+            }
+        }
         public List<Card> Cards;
         public bool CanAddMore { get { return Cards.Count < 10; } }
         
@@ -24,6 +35,7 @@ namespace Assets.Scripts.Player
         {
             Cards = new List<Card>();
             Player = transform.parent.GetComponent<Player>();
+            game = FindObjectOfType<TensGame>();
         }
 
         void Update()
@@ -33,14 +45,14 @@ namespace Assets.Scripts.Player
 
         void OnMouseDown()
         {
-            switch (TensGame.CurrentState)
+            switch (game.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    if (CanAddMore && !TensGame.Instance.Deck.Dealing)
-                        AddCard(TensGame.Instance.Deck.GetTopCard());
+                    if (CanAddMore && !Deck.Dealing)
+                        AddCard(Deck.GetTopCard());
                     break;
                 case TensGame.GameState.Bid:
-                    if (!Player.HasPickedUpCards && !Cards.Any(a=> a.Moving))
+                    if (!Player.HasPickedUpCards && !Cards.Any(a => a.Moving))
                         Player.PickUpHand();
                     break;
                 case TensGame.GameState.HandPlay:

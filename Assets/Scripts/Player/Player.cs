@@ -13,8 +13,17 @@ namespace Assets.Scripts.Player
         public HandArea Hand { get; private set; }
         public TableArea Table { get; private set; }
 
-        private static int _playerNumber = 1;
+        private static int _playerNumber = 0;
 
+        private Deck _deck;
+        private Deck Deck
+        {
+            get
+            {
+                if (_deck == null) _deck = FindObjectOfType<Deck>();
+                return _deck;
+            }
+        }
         public int Number;
         public bool HasPickedUpCards { get; private set; }
 
@@ -29,8 +38,9 @@ namespace Assets.Scripts.Player
         // Use this for initialization
         void Start()
         {
+            Debug.Log("Spawning on " + (UnityEngine.Network.isServer ? "Server" : "Client") + " " + networkView.viewID);
             Number = _playerNumber++;
-            if (Number == 2)
+            if (Number == 1)
             {
                 foreach (var tf in transform.GetComponentsInChildren<Transform>())
                 {
@@ -47,16 +57,15 @@ namespace Assets.Scripts.Player
 
         }
 
-
         public void PickUpHand()
         {
             var suitedCards = Hand.Cards.GroupBy(a => a.Suit).Select(a => a.ToList()).ToList();
             suitedCards.Sort((a, b) => a[0].Suit.CompareTo(b[0].Suit));
             if (suitedCards.Count == 3)
             {
-                if ((suitedCards[2].First().Suit - suitedCards[0].First().Suit)%2 != 0)
+                if ((suitedCards[2].First().Suit - suitedCards[0].First().Suit) % 2 != 0)
                 {
-                    suitedCards.Swap(0,1);
+                    suitedCards.Swap(0, 1);
                 }
 
                 //if the first swap didn't put the right one in the center
@@ -80,13 +89,12 @@ namespace Assets.Scripts.Player
                 var dummyTransform = Instantiate(gameObject.transform) as Transform;
                 dummyTransform.position = straightLinePos;
                 dummyTransform.RotateAround(Hand.transform.position, Vector3.forward, HandSpread * (4.5f - i));
-                var targetRot = HandRotation * (4.5f - i);
                 var thisCard = Hand.Cards[i];
                 thisCard.Flip();
                 thisCard.RotateTo(dummyTransform.rotation.eulerAngles.z * HandRotation, true);
                 thisCard.MoveTo(dummyTransform.position);
-
-                Destroy(dummyTransform.gameObject);
+                UnityEngine.Network.RemoveRPCs(dummyTransform.GetComponent<NetworkView>().viewID);
+                UnityEngine.Network.Destroy(dummyTransform.gameObject);
             }
             HasPickedUpCards = true;
         }
@@ -99,5 +107,13 @@ namespace Assets.Scripts.Player
                 Hand.AddCard(card);
         }
 
+        public void SetDealer()
+        {
+            Dealer = true;
+            var deck = Resources.Load<Deck>("Prefabs/Deck");
+            UnityEngine.Network.Instantiate(deck, transform.position, transform.rotation, 0);
+
+        }
     }
+
 }

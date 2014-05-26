@@ -12,6 +12,8 @@ namespace Assets.Scripts.Cards
         public static float AnimTime = .5f;
         public bool IsFaceUp { get { return Vector3.Dot(transform.forward, Vector3.forward) > 0; } }
 
+        public Player.Player Owner { get; private set; }
+
         public CardSuit Suit { get; private set; }
         public CardRank Rank { get; private set; }
 
@@ -31,6 +33,7 @@ namespace Assets.Scripts.Cards
 
         void Update()
         {
+            enabled = false;
         }
 
         void OnMouseDown()
@@ -54,17 +57,28 @@ namespace Assets.Scripts.Cards
             Moving = false;
         }
 
+        public void AssignOwner(Player.Player player)
+        {
+            Owner = player;
+        }
+
 
         public void SetInfo(CardRank rank, CardSuit suit)
         {
-            Rank = rank;
-            Suit = suit;
+            networkView.RPC("SetInfoRPC", RPCMode.AllBuffered, (int)rank, (int)suit);
+        }
+
+        [RPC]
+        private void SetInfoRPC(int rank, int suit)
+        {
+            Rank = (CardRank)rank;
+            Suit = (CardSuit)suit;
             var rankChar = "";
-            if ((int)rank < 9)
-                rankChar = ((int)rank + 2).ToString();
+            if ((int)Rank < 9)
+                rankChar = ((int)Rank + 2).ToString();
             else
             {
-                switch ((int)rank)
+                switch ((int)Rank)
                 {
                     case 9:
                         rankChar = "J";
@@ -81,7 +95,7 @@ namespace Assets.Scripts.Cards
                 }
             }
 
-            var cardString = "card" + suit + rankChar;
+            var cardString = "card" + Suit + rankChar;
             var frontSprite = Resources.Load<Sprite>("Cards/" + cardString);
             if (frontSprite == null)
                 throw new Exception("Couldn't load " + cardString);
@@ -166,44 +180,16 @@ namespace Assets.Scripts.Cards
             Rotating = false;
         }
 
-        public void RotateAroundTo(float angle, Vector3 zAxisCoords)
-        {
-            if (!Moving)
-                StartCoroutine(AnimateRotateAround(angle, zAxisCoords, AnimTime));
-        }
-        IEnumerator AnimateRotateAround(float to, Vector3 zAxisCoords, float flipTime)
-        {
-            var startTime = Time.time;
-            while (Moving || Flipping || Rotating)
-            {
-                if(Time.time - startTime > AnimTimeout)
-                    yield break;
-                yield return null;
-            }
-            Moving = true;
-            var time = 0f;
-            var vectorFromAxisToSelf = transform.position - zAxisCoords;
-            vectorFromAxisToSelf.z = 0;
-            var startAngle = Vector3.Angle(Vector3.right, vectorFromAxisToSelf);
-            var delta = to - startAngle;
-            while (time < 1)
-            {
-                time += Time.deltaTime / flipTime;
-                transform.RotateAround(zAxisCoords, Vector3.up, delta * time);
-                yield return null;
-            }
-            Moving = false;
-        }
 
-        public enum CardSuit
-        {
-            Spades, Hearts, Clubs, Diamonds
-        }
+    }
 
-        public enum CardRank
-        {
-            Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace
-        }
+    public enum CardSuit
+    {
+        Spades, Hearts, Clubs, Diamonds
+    }
 
+    public enum CardRank
+    {
+        Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace
     }
 }

@@ -17,6 +17,16 @@ namespace Assets.Scripts.Player
         private List<Card> _bottomCards;
         private List<Card> _topCards;
 
+        private Deck _deck;
+        private Deck Deck
+        {
+            get
+            {
+                if (_deck == null) _deck = FindObjectOfType<Deck>();
+                return _deck;
+            }
+        }
+        private TensGame game;
         public Player Player { get; private set; }
 
         public bool CanAddMore { get { return _topCards.Count < 5; } }
@@ -27,6 +37,7 @@ namespace Assets.Scripts.Player
             _topCards = new List<Card>();
             _verticalOffset *= transform.position.y < 0 ? 1 : -1;
             Player = transform.parent.GetComponent<Player>();
+            game = FindObjectOfType<TensGame>();
         }
 
         void Update()
@@ -36,11 +47,11 @@ namespace Assets.Scripts.Player
 
         void OnMouseDown()
         {
-            switch (TensGame.CurrentState)
+            switch (game.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    if (CanAddMore && !TensGame.Instance.Deck.Dealing)
-                        AddCard(TensGame.Instance.Deck.GetTopCard());
+                    if (CanAddMore && !Deck.Dealing)
+                        AddCard(Deck.GetTopCard());
                     break;
                 case TensGame.GameState.Bid:
                     break;

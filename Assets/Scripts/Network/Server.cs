@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.Network
 {
     public class Server : MonoBehaviour {
 
         // Use this for initialization
         void Start ()
         {
-            Network.InitializeServer(10, 28800, true);
         }
 	
         // Update is called once per frame

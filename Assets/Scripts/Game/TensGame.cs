@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts.Common;
 using Assets.Scripts.Cards;
@@ -17,32 +18,63 @@ namespace Assets.Scripts.Game
 
         public Player.Player PlayerTemplate;
 
+        public Player.Player DealerPlayer;
+
+        private Deck _deck;
+        private Deck Deck {
+            get
+            {
+                if (_deck == null) _deck = FindObjectOfType<Deck>();
+                return _deck;
+            }
+        }
+
         [HideInInspector]
         public List<Player.Player> AllPlayers;
 
-        public Deck DeckTemplate;
-
-        [HideInInspector]
-        public Deck Deck;
-
-        public static TensGame Instance { get; private set; }
-
-        public static GameState CurrentState = GameState.Deal;
+        public GameState CurrentState { get; private set; }
 
         void Start()
         {
-            for (int i = 0; i < MaxPlayers; i++)
-            {
-                var player = Instantiate(PlayerTemplate);
-            }
-            Instance = gameObject.GetComponent<TensGame>();
-            Deck = Instantiate(DeckTemplate, new Vector3(-8, 0, -2), Quaternion.identity) as Deck;
         }
 
         void Update()
         {
-
+            switch (CurrentState)
+            {
+                case GameState.Deal:
+                    if (DealerPlayer != null && Deck.DoneDealing && Deck.CardsLeft == 0)
+                        networkView.RPC("SetGameState", RPCMode.AllBuffered, (int)GameState.Bid);
+                    break;
+                case GameState.Bid:
+                    break;
+                case GameState.HandPlay:
+                    break;
+                case GameState.TablePlay:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
+
+        [RPC]
+        public void SetDealer(int playerIndex)
+        {
+            networkView.RPC("SetDealerRPC", RPCMode.AllBuffered, playerIndex);
+        }
+
+        [RPC]
+        private void SetDealerRPC(int playerIndex)
+        {
+            DealerPlayer = FindObjectsOfType<Player.Player>()[playerIndex];
+        }
+
+        [RPC]
+        public void SetGameState(int state)
+        {
+            CurrentState = (GameState)state;
+        }
+
 
     }
 }

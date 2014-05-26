@@ -52,6 +52,7 @@
     <Compile Include="Assets\Scripts\Cards\Deck.cs" />
     <Compile Include="Assets\Scripts\Common\Util.cs" />
     <Compile Include="Assets\Scripts\Game\TensGame.cs" />
+    <Compile Include="Assets\Scripts\Network\NetworkManager.cs" />
     <Compile Include="Assets\Scripts\Network\Server.cs" />
     <Compile Include="Assets\Scripts\Player\HandArea.cs" />
     <Compile Include="Assets\Scripts\Player\Player.cs" />
