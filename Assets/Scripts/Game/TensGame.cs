@@ -43,7 +43,7 @@ namespace Assets.Scripts.Game
             switch (CurrentState)
             {
                 case GameState.Deal:
-                    if (DealerPlayer != null && Deck.DoneDealing && Deck.CardsLeft == 0)
+                    if (DealerPlayer != null && Deck.DoneDealing)
                         networkView.RPC("SetGameState", RPCMode.AllBuffered, (int)GameState.Bid);
                     break;
                 case GameState.Bid:

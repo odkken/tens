@@ -99,20 +99,26 @@ namespace Assets.Scripts.Player
             HasPickedUpCards = true;
         }
 
-        public void GiveCard(Card card)
+        public void GiveCard()
         {
             if (Table.CanAddMore)
-                Table.AddCard(card);
+                Table.AddCard();
             else
-                Hand.AddCard(card);
+                Hand.AddCard();
         }
 
-        public void SetDealer()
+        public void SetDealer(int shuffleSeed)
+        {
+            networkView.RPC("SetDealerRPC", RPCMode.AllBuffered, shuffleSeed);
+        }
+
+        [RPC]
+        private void SetDealerRPC(int shuffleSeed)
         {
             Dealer = true;
             var deck = Resources.Load<Deck>("Prefabs/Deck");
-            UnityEngine.Network.Instantiate(deck, transform.position, transform.rotation, 0);
-
+            var newDeck = Instantiate(deck, Vector3.zero, Quaternion.identity) as Deck;
+            newDeck.Shuffle(shuffleSeed);
         }
     }
 

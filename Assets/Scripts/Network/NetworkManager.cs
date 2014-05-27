@@ -39,8 +39,8 @@ namespace Assets.Scripts.Network
             if (UnityEngine.Network.isServer)
             {
                 var players = FindObjectsOfType<Player.Player>();
-                if (players.Count() == 2 && !players.Any(a => a.Dealer))
-                    players[0].SetDealer();
+                if (players.Count() == 1 && !players.Any(a => a.Dealer))
+                    players[0].SetDealer(new System.Random().Next());
             }
         }
 
@@ -69,17 +69,6 @@ namespace Assets.Scripts.Network
         void OnDisconnectedFromServer()
         {
             Application.Quit();
-        }
-
-        [RPC]
-        void AddPlayer()
-        {
-            if (Players.Count == 1)
-            {
-                var dealerIndex = 0; //Random.Range(0, 1);
-                Debug.Log("Setting dealer to index " + dealerIndex);
-                Players[dealerIndex].SetDealer();
-            }
         }
 
         private IEnumerator RefreshHosts()

@@ -8,9 +8,9 @@ namespace Assets.Scripts.Common
     {
         private static System.Random rand;
 
-        public static void Shuffle<T>(this IList<T> list)
+        public static void Shuffle<T>(this IList<T> list, int seed)
         {
-            var rng = new System.Random();
+            var rng = new System.Random(seed);
             int n = list.Count;
             while (n > 1)
             {

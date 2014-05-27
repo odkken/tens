@@ -63,13 +63,22 @@ namespace Assets.Scripts.Cards
         }
 
 
-        public void SetInfo(CardRank rank, CardSuit suit)
+        public int ToInt()
         {
-            networkView.RPC("SetInfoRPC", RPCMode.AllBuffered, (int)rank, (int)suit);
+            return (int)Suit * 13 + (int)Rank;
         }
 
-        [RPC]
-        private void SetInfoRPC(int rank, int suit)
+        public static void FromInt(int encodedInfo, out CardRank rank, out CardSuit suit)
+        {
+            suit = (CardSuit)(int)Math.Floor(encodedInfo / 13f);
+            rank = (CardRank)(encodedInfo % 13);
+        }
+        public void SetInfo(CardRank rank, CardSuit suit)
+        {
+            SetInfo((int)rank, (int)suit);
+        }
+
+        private void SetInfo(int rank, int suit)
         {
             Rank = (CardRank)rank;
             Suit = (CardSuit)suit;
@@ -112,7 +121,7 @@ namespace Assets.Scripts.Cards
         {
             Flipping = true;
             var startAngle = transform.rotation.eulerAngles.y;
-            var endAngle = startAngle - 180;
+            var endAngle = Math.Abs(startAngle - 180) < 90 ? 0 : 180;
             var time = 0f;
             while (time < 1)
             {

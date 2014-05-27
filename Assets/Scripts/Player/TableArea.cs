@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Cards;
 using Assets.Scripts.Game;
 using UnityEngine;
@@ -20,11 +21,7 @@ namespace Assets.Scripts.Player
         private Deck _deck;
         private Deck Deck
         {
-            get
-            {
-                if (_deck == null) _deck = FindObjectOfType<Deck>();
-                return _deck;
-            }
+            get { return _deck ?? (_deck = FindObjectOfType<Deck>()); }
         }
         private TensGame game;
         public Player Player { get; private set; }
@@ -50,8 +47,9 @@ namespace Assets.Scripts.Player
             switch (game.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    if (CanAddMore && !Deck.Dealing)
-                        AddCard(Deck.GetTopCard());
+                    var allPlayers = FindObjectsOfType<Player>();
+                    if (allPlayers.Any(a => a.Dealer) && allPlayers.Single(a => a.Dealer).networkView.isMine && CanAddMore && !Deck.Dealing)
+                        networkView.RPC("AddCard", RPCMode.All);
                     break;
                 case TensGame.GameState.Bid:
                     break;
@@ -63,9 +61,10 @@ namespace Assets.Scripts.Player
                     throw new ArgumentOutOfRangeException();
             }
         }
-
-        public void AddCard(Card card)
+        [RPC]
+        public void AddCard()
         {
+            var card = Deck.GetTopCard();
             if (_bottomCards.Count < 5)
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);

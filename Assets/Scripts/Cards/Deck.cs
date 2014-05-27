@@ -12,13 +12,17 @@ namespace Assets.Scripts.Cards
 {
     public class Deck : MonoBehaviour
     {
-        public GameObject TemplateCard;
-        public List<Card> Cards { get; private set; }
-        public int CardsLeft { get { return Cards.Count; } }
+        private List<Card> _cards;
+        public List<Card> Cards
+        {
+            get { return _cards ?? (_cards = GetComponentsInChildren<Card>().ToList()); }
+        }
+        public int CardsLeft { get { return Cards != null ? Cards.Count : 0; } }
         public float DealTime = 1f;
         private const float CardSpacing = .01f;
         public bool Dealing { get; private set; }
         public bool DoneDealing { get; private set; }
+        public bool Shuffled;
         private TensGame game;
 
         public Player.Player Dealer { get; private set; }
@@ -26,8 +30,10 @@ namespace Assets.Scripts.Cards
         // Use this for initialization
         void Start()
         {
-            Initialize();
             game = FindObjectOfType<TensGame>();
+            Shuffled = false;
+            Dealing = false;
+            DoneDealing = false;
         }
 
         void Update()
@@ -55,37 +61,19 @@ namespace Assets.Scripts.Cards
             }
         }
 
-        void Initialize()
+        void Initialize(int rngSeed)
         {
-            if (!networkView.isMine) return;
             Dealing = false;
-            Cards = new List<Card>();
-            foreach (CardRank rank in Enum.GetValues(typeof(CardRank)))
-            {
-                if ((int)rank > 2)
-                {
-                    foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
-                    {
-                        var card = UnityEngine.Network.Instantiate(TemplateCard.GetComponent<Card>(), transform.position, transform.rotation, 0) as Card;
-                        Debug.Log(networkView.isMine);
-                        card.SetInfo(rank, suit);
-                        Cards.Add(card);
-                        card.transform.position = transform.position + new Vector3(0, 0, -CardSpacing * Cards.Count);
-                        card.transform.parent = transform;
-                        card.transform.rotation = Quaternion.Euler(card.transform.eulerAngles.x, card.transform.eulerAngles.y, UnityEngine.Random.Range(0f, 1f) > .5 ? 180 : 0);
-                    }
-                }
-            }
-            Shuffle();
         }
 
 
         void OnMouseDown()
         {
-            if (game.CurrentState == TensGame.GameState.Deal && !Dealing && networkView.isMine)
-                Deal();
+            if (game.CurrentState == TensGame.GameState.Deal && !Dealing && networkView.isMine && gameObject.GetComponent<Deck>() != null)
+                networkView.RPC("Deal", RPCMode.AllBuffered);
         }
 
+        [RPC]
         private void Deal()
         {
             Dealing = true;
@@ -103,7 +91,7 @@ namespace Assets.Scripts.Cards
                 var receivingPlayer = players[dealTo++];
                 if (receivingPlayer.CanAddMore)
                 {
-                    receivingPlayer.GiveCard(GetTopCard());
+                    receivingPlayer.GiveCard();
                     waitTime = dealTime / totalCards;
                 }
                 if (dealTo == players.Count())
@@ -113,13 +101,20 @@ namespace Assets.Scripts.Cards
             Dealing = false;
         }
 
-        public void Shuffle()
+        public void Shuffle(int seed)
         {
-            Cards.Shuffle();
+            Cards.Shuffle(seed);
+            Shuffled = true;
             for (int i = 0; i < Cards.Count; i++)
             {
                 Cards[i].transform.position = transform.position + new Vector3(0, 0, -CardSpacing * i);
             }
+        }
+
+        [RPC]
+        public void ShuffleRPC(int seed)
+        {
+            Shuffle(seed);
         }
 
         public Card GetTopCard()
