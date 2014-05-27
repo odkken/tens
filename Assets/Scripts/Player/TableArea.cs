@@ -44,22 +44,22 @@ namespace Assets.Scripts.Player
 
         void OnMouseDown()
         {
-            switch (game.CurrentState)
-            {
-                case TensGame.GameState.Deal:
-                    var allPlayers = FindObjectsOfType<Player>();
-                    if (allPlayers.Any(a => a.Dealer) && allPlayers.Single(a => a.Dealer).networkView.isMine && CanAddMore && !Deck.Dealing)
-                        networkView.RPC("AddCard", RPCMode.All);
-                    break;
-                case TensGame.GameState.Bid:
-                    break;
-                case TensGame.GameState.HandPlay:
-                    break;
-                case TensGame.GameState.TablePlay:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            //switch (game.CurrentState)
+            //{
+            //    case TensGame.GameState.Deal:
+            //        var allPlayers = FindObjectsOfType<Player>();
+            //        if (allPlayers.Any(a => a.Dealer) && allPlayers.Single(a => a.Dealer).networkView.isMine && CanAddMore && !Deck.Dealing)
+            //            networkView.RPC("AddCard", RPCMode.All);
+            //        break;
+            //    case TensGame.GameState.Bid:
+            //        break;
+            //    case TensGame.GameState.HandPlay:
+            //        break;
+            //    case TensGame.GameState.TablePlay:
+            //        break;
+            //    default:
+            //        throw new ArgumentOutOfRangeException();
+            //}
         }
         [RPC]
         public void AddCard()

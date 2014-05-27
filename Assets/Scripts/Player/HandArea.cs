@@ -48,9 +48,9 @@ namespace Assets.Scripts.Player
             switch (game.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    var allPlayers = FindObjectsOfType<Player>();
-                    if (allPlayers.Any(a => a.Dealer) && allPlayers.Single(a => a.Dealer).networkView.isMine && CanAddMore && !Deck.Dealing)
-                        networkView.RPC("AddCard", RPCMode.All);
+                    //var allPlayers = FindObjectsOfType<Player>();
+                    //if (allPlayers.Any(a => a.Dealer) && allPlayers.Single(a => a.Dealer).networkView.isMine && CanAddMore && !Deck.Dealing)
+                    //    networkView.RPC("AddCard", RPCMode.All);
                     break;
                 case TensGame.GameState.Bid:
                     if (!Player.HasPickedUpCards && !Cards.Any(a => a.Moving))

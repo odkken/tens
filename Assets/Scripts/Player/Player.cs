@@ -59,6 +59,12 @@ namespace Assets.Scripts.Player
 
         public void PickUpHand()
         {
+            networkView.RPC("PickUpHandRPC", RPCMode.AllBuffered);
+        }
+
+        [RPC]
+        public void PickUpHandRPC()
+        {
             var suitedCards = Hand.Cards.GroupBy(a => a.Suit).Select(a => a.ToList()).ToList();
             suitedCards.Sort((a, b) => a[0].Suit.CompareTo(b[0].Suit));
             if (suitedCards.Count == 3)
@@ -86,15 +92,14 @@ namespace Assets.Scripts.Player
             for (int i = 0; i < Hand.Cards.Count; i++)
             {
                 var straightLinePos = Hand.transform.position + new Vector3(HandSpread * (-4.5f + i), 0, -(i + .5f));
-                var dummyTransform = Instantiate(gameObject.transform) as Transform;
-                dummyTransform.position = straightLinePos;
-                dummyTransform.RotateAround(Hand.transform.position, Vector3.forward, HandSpread * (4.5f - i));
+                var dummyObject = new GameObject();
+                dummyObject.transform.position = straightLinePos;
+                dummyObject.transform.RotateAround(Hand.transform.position, Vector3.forward, HandSpread * (4.5f - i));
                 var thisCard = Hand.Cards[i];
                 thisCard.Flip();
-                thisCard.RotateTo(dummyTransform.rotation.eulerAngles.z * HandRotation, true);
-                thisCard.MoveTo(dummyTransform.position);
-                UnityEngine.Network.RemoveRPCs(dummyTransform.GetComponent<NetworkView>().viewID);
-                UnityEngine.Network.Destroy(dummyTransform.gameObject);
+                thisCard.RotateTo(dummyObject.transform.rotation.eulerAngles.z * HandRotation, true);
+                thisCard.MoveTo(dummyObject.transform.position);
+                Destroy(dummyObject);
             }
             HasPickedUpCards = true;
         }

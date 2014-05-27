@@ -36,12 +36,9 @@ namespace Assets.Scripts.Network
         // Update is called once per frame
         void Update()
         {
-            if (UnityEngine.Network.isServer)
-            {
-                var players = FindObjectsOfType<Player.Player>();
-                if (players.Count() == 1 && !players.Any(a => a.Dealer))
-                    players[0].SetDealer(new System.Random().Next());
-            }
+            var players = FindObjectsOfType<Player.Player>();
+            if (players.Count() == 2 && !players.Any(a => a.Dealer))
+                players[0].SetDealer(new System.Random().Next());
         }
 
         private void StartServer()

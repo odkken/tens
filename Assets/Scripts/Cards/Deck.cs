@@ -47,6 +47,7 @@ namespace Assets.Scripts.Cards
                         transform.position = new Vector3(-999, -999, -999);
                         Dealing = false;
                         DoneDealing = true;
+                        game.SetGameState((int)TensGame.GameState.Bid);
                     }
 
                     break;
@@ -121,7 +122,7 @@ namespace Assets.Scripts.Cards
         {
             var card = Cards.Pop();
             card.transform.parent = null;
-            return card;
+                return card;
         }
     }
 }

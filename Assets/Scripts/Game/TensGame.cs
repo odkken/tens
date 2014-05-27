@@ -21,7 +21,8 @@ namespace Assets.Scripts.Game
         public Player.Player DealerPlayer;
 
         private Deck _deck;
-        private Deck Deck {
+        private Deck Deck
+        {
             get
             {
                 if (_deck == null) _deck = FindObjectOfType<Deck>();
@@ -69,12 +70,15 @@ namespace Assets.Scripts.Game
             DealerPlayer = FindObjectsOfType<Player.Player>()[playerIndex];
         }
 
-        [RPC]
         public void SetGameState(int state)
+        {
+            networkView.RPC("SetGameStateRPC", RPCMode.AllBuffered, state);
+        }
+        [RPC]
+        private void SetGameStateRPC(int state)
         {
             CurrentState = (GameState)state;
         }
-
 
     }
 }
