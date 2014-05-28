@@ -21,6 +21,7 @@ namespace Assets.Scripts.Cards
         public float DealTime = 1f;
         private const float CardSpacing = .01f;
         public bool Dealing { get; private set; }
+        public int shuffleSeed;
         public bool DoneDealing { get; private set; }
         public bool Shuffled;
         private TensGame game;
@@ -70,13 +71,14 @@ namespace Assets.Scripts.Cards
 
         void OnMouseDown()
         {
-            if (game.CurrentState == TensGame.GameState.Deal && !Dealing && networkView.isMine && gameObject.GetComponent<Deck>() != null)
+            if (game.DealerPlayer.IsLocalPlayer && game.CurrentState == TensGame.GameState.Deal)
                 networkView.RPC("Deal", RPCMode.AllBuffered);
         }
 
         [RPC]
         private void Deal()
         {
+            Shuffle(shuffleSeed);
             Dealing = true;
             StartCoroutine(AnimateDeal(DealTime));
         }
@@ -102,6 +104,16 @@ namespace Assets.Scripts.Cards
             Dealing = false;
         }
 
+        public void SetSeed(int seed)
+        {
+            networkView.RPC("SetSeedRPC", RPCMode.AllBuffered, shuffleSeed);
+        }
+        [RPC]
+        private void SetSeedRPC(int seed)
+        {
+            shuffleSeed = seed;
+        }
+
         public void Shuffle(int seed)
         {
             Cards.Shuffle(seed);
@@ -122,7 +134,7 @@ namespace Assets.Scripts.Cards
         {
             var card = Cards.Pop();
             card.transform.parent = null;
-                return card;
+            return card;
         }
     }
 }

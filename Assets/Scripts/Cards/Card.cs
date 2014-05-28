@@ -29,6 +29,9 @@ namespace Assets.Scripts.Cards
             Flipping = false;
             Moving = false;
             Rotating = false;
+            var splitName = name.Replace("of", ",").Split(',');
+            Rank = (CardRank)Enum.Parse(typeof(CardRank), splitName[0], true);
+            Suit = (CardSuit)Enum.Parse(typeof(CardSuit), splitName[1], true);
         }
 
         void Update()
@@ -38,14 +41,14 @@ namespace Assets.Scripts.Cards
 
         void OnMouseDown()
         {
-            if (!IsFaceUp) return;
+            if (!IsFaceUp || !Owner.IsLocalPlayer) return;
             _initClickOffset = Input.mousePosition - Camera.main.WorldToScreenPoint(transform.position);
-            RotateTo(Mathf.Abs(transform.rotation.eulerAngles.z - 180) < 90 ? 180 : 0, true);
+            RotateTo(Mathf.Abs(transform.rotation.eulerAngles.z - 180) < 90 ? 180 : 0, true, false);
         }
 
         void OnMouseDrag()
         {
-            if (!IsFaceUp) return;
+            if (!IsFaceUp || !Owner.IsLocalPlayer) return;
             Moving = true;
             var newPos = Camera.main.ScreenToWorldPoint(Input.mousePosition - _initClickOffset);
             newPos.z = transform.position.z;
@@ -76,6 +79,11 @@ namespace Assets.Scripts.Cards
         public void SetInfo(CardRank rank, CardSuit suit)
         {
             SetInfo((int)rank, (int)suit);
+        }
+
+        public override string ToString()
+        {
+            return Rank + " of " + Suit;
         }
 
         private void SetInfo(int rank, int suit)
@@ -154,17 +162,17 @@ namespace Assets.Scripts.Cards
             Moving = false;
         }
 
-        public void RotateTo(float angle, bool shortestPath)
+        public void RotateTo(float angle, bool shortestPath, bool flip)
         {
             if (!Rotating)
-                StartCoroutine(AnimateRotate(angle, AnimTime, shortestPath));
+                StartCoroutine(AnimateRotate(angle, AnimTime, shortestPath, flip));
         }
-        IEnumerator AnimateRotate(float to, float flipTime, bool shortestPath)
+        IEnumerator AnimateRotate(float to, float flipTime, bool shortestPath, bool flip)
         {
             Rotating = true;
             var time = 0f;
 
-            if (shortestPath)
+            if (shortestPath && flip)
             {
                 var startRot = transform.rotation;
                 var endRot = Quaternion.Euler(startRot.x, startRot.y, to);
@@ -174,6 +182,21 @@ namespace Assets.Scripts.Cards
                     transform.rotation = Quaternion.Slerp(startRot, endRot, Mathf.Log10(time * 9 + 1));
                     yield return null;
                 }
+            }
+            else if (shortestPath)
+            {
+                var startRot = transform.rotation;
+                var dummyObject = new GameObject();
+                dummyObject.transform.rotation = startRot;
+                dummyObject.transform.Rotate(0, 0, to - startRot.eulerAngles.z);
+                var endRot = dummyObject.transform.rotation;
+                while (time < 1)
+                {
+                    time += Time.deltaTime / flipTime;
+                    transform.rotation = Quaternion.Slerp(startRot, endRot, Mathf.Log10(time * 9 + 1));
+                    yield return null;
+                }
+                Destroy(dummyObject);
             }
             else
             {

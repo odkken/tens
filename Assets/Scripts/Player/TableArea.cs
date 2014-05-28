@@ -65,6 +65,7 @@ namespace Assets.Scripts.Player
         public void AddCard()
         {
             var card = Deck.GetTopCard();
+            card.AssignOwner(Player);
             if (_bottomCards.Count < 5)
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);

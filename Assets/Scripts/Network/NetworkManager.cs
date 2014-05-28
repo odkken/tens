@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Assets.Scripts.Common;
 using Assets.Scripts.Game;
 using UnityEngine;
 
@@ -12,18 +14,21 @@ namespace Assets.Scripts.Network
         public string GameTypeName = "Tens 2 Player";
         public string GameName = "Tens Test";
 
+        private int MaxPlayers = 2;
         public Player.Player PlayerTemplate;
         public TensGame Game;
-        public List<Player.Player> Players;
+        public List<NetworkPlayer> NetworkPlayers;
         public Rect ServerListButtonRect;
         private HostData[] _hosts;
         private bool _refreshing;
+        private bool gameStarted;
         private Rect _connectRect;
         private Rect _startServerRect;
         // Use this for initialization
         void Start()
         {
-            Players = new List<Player.Player>();
+            gameStarted = false;
+            NetworkPlayers = new List<NetworkPlayer>();
             var sWidth = Screen.width;
             var sHeight = Screen.height;
             _connectRect = new Rect(sWidth * .1f, sHeight * .1f, sWidth * .1f, sHeight * .1f);
@@ -33,13 +38,19 @@ namespace Assets.Scripts.Network
             //UnityEngine.Network.logLevel = NetworkLogLevel.Full;
         }
 
+
+
         // Update is called once per frame
         void Update()
         {
-            var players = FindObjectsOfType<Player.Player>();
-            if (players.Count() == 2 && !players.Any(a => a.Dealer))
-                players[0].SetDealer(new System.Random().Next());
+            if (UnityEngine.Network.isServer && !gameStarted && NetworkPlayers.Count == MaxPlayers)
+            {
+                gameStarted = true;
+                //NetworkPlayers.Shuffle(UnityEngine.Random.Range(0, 255));
+                networkView.RPC("SpawnPlayers", RPCMode.AllBuffered, string.Join(",", NetworkPlayers.Select(a => a.ToString()).ToArray()), UnityEngine.Random.Range(int.MinValue, int.MaxValue));
+            }
         }
+
 
         private void StartServer()
         {
@@ -47,20 +58,59 @@ namespace Assets.Scripts.Network
             MasterServer.RegisterHost(GameTypeName, GameName);
         }
 
-        private void SpawnPlayer()
+        private void RegisterPlayer()
         {
-            UnityEngine.Network.Instantiate(PlayerTemplate, Vector3.zero, Quaternion.identity, 0);
+            //UnityEngine.Network.Instantiate(PlayerTemplate, Vector3.zero, Quaternion.identity, 0);
+            networkView.RPC("RegisterPlayerRPC", RPCMode.AllBuffered);
         }
+        [RPC]
+        private void RegisterPlayerRPC(NetworkMessageInfo info)
+        {
+            if (!UnityEngine.Network.isServer) return;
+            NetworkPlayers.Add(info.sender);
+            Debug.Log("Registered " + info.sender);
+        }
+
+
+        [RPC]
+        private void SpawnPlayers(string csvIds, int shuffleSeed)
+        {
+            var playerIds = new List<String>(csvIds.Split(','));
+            for (var i = 0; i < playerIds.Count(); i++)
+            {
+                var playerId = playerIds[i];
+
+                //some bullshit the server does
+                if (playerId == "-1")
+                    playerId = "0";
+
+                if (playerId == UnityEngine.Network.player.ToString())
+                {
+                    var player = UnityEngine.Network.Instantiate(PlayerTemplate, new Vector3(0, -3, -1), Quaternion.identity, 0) as Player.Player;
+                    player.transform.RotateAround(Vector3.zero, Vector3.forward, 180 * i);
+                    Camera.main.transform.rotation = player.transform.rotation;
+                    player.IsLocalPlayer = true;
+                    if (i == 0)
+                    {
+                        player.SetDealer(shuffleSeed);
+                        Debug.Log("Dealer is player " + playerId);
+                    }
+                }
+            }
+
+        }
+
+
 
         void OnServerInitialized()
         {
             UnityEngine.Network.Instantiate(Game, Vector3.zero, Quaternion.identity, 0);
-            SpawnPlayer();
+            RegisterPlayer();
         }
 
         void OnConnectedToServer()
         {
-            SpawnPlayer();
+            RegisterPlayer();
         }
 
         void OnDisconnectedFromServer()

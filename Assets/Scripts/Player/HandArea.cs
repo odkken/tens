@@ -69,11 +69,12 @@ namespace Assets.Scripts.Player
         public void AddCard()
         {
             var card = Deck.GetTopCard();
+            card.AssignOwner(Player);
             if (Cards.Count < 10)
             {
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);
                 card.MoveTo(transform.position + new Vector3(Util.NextGaussian(PositionalRandomness), Util.NextGaussian(PositionalRandomness), -DepthSpacing * (Cards.Count + 1)));
-                card.RotateTo(Util.NextGaussian(RotationalRandomness) * 180, false);
+                card.RotateTo(Util.NextGaussian(RotationalRandomness) * 180, false, false);
                 Cards.Add(card);
                 card.transform.parent = transform;
             }

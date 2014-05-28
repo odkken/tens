@@ -15,6 +15,8 @@ namespace Assets.Scripts.Player
 
         private static int _playerNumber = 0;
 
+        public string NetworkId;
+
         private Deck _deck;
         private Deck Deck
         {
@@ -33,6 +35,7 @@ namespace Assets.Scripts.Player
         public bool CanAddMore { get { return Hand.CanAddMore || Table.CanAddMore; } }
 
         public bool Dealer = false;
+        public bool IsLocalPlayer = false;
 
 
         // Use this for initialization
@@ -91,13 +94,12 @@ namespace Assets.Scripts.Player
 
             for (int i = 0; i < Hand.Cards.Count; i++)
             {
-                var straightLinePos = Hand.transform.position + new Vector3(HandSpread * (-4.5f + i), 0, -(i + .5f));
+                var straightLinePos = Hand.transform.position + HandSpread * (-4.5f + i) * Hand.transform.right + new Vector3(0, 0, -(i + .5f));
                 var dummyObject = new GameObject();
                 dummyObject.transform.position = straightLinePos;
-                dummyObject.transform.RotateAround(Hand.transform.position, Vector3.forward, HandSpread * (4.5f - i));
+                dummyObject.transform.RotateAround(Hand.transform.position, transform.forward, HandSpread * (4.5f - i));
                 var thisCard = Hand.Cards[i];
-                thisCard.Flip();
-                thisCard.RotateTo(dummyObject.transform.rotation.eulerAngles.z * HandRotation, true);
+                thisCard.RotateTo(dummyObject.transform.rotation.eulerAngles.z * HandRotation * Vector3.Dot(Camera.main.transform.right, transform.right), true, IsLocalPlayer);
                 thisCard.MoveTo(dummyObject.transform.position);
                 Destroy(dummyObject);
             }
@@ -114,16 +116,16 @@ namespace Assets.Scripts.Player
 
         public void SetDealer(int shuffleSeed)
         {
+            var deck = Resources.Load<Deck>("Prefabs/Deck");
+            var newDeck = UnityEngine.Network.Instantiate(deck, Vector3.zero, Quaternion.identity, 0) as Deck;
+            newDeck.SetSeed(shuffleSeed);
             networkView.RPC("SetDealerRPC", RPCMode.AllBuffered, shuffleSeed);
         }
-
         [RPC]
         private void SetDealerRPC(int shuffleSeed)
         {
             Dealer = true;
-            var deck = Resources.Load<Deck>("Prefabs/Deck");
-            var newDeck = Instantiate(deck, Vector3.zero, Quaternion.identity) as Deck;
-            newDeck.Shuffle(shuffleSeed);
+            FindObjectOfType<TensGame>().DealerPlayer = GetComponent<Player>();
         }
     }
 
