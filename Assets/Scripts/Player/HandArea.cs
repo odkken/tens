@@ -10,8 +10,8 @@ namespace Assets.Scripts.Player
 {
     public class HandArea : MonoBehaviour
     {
-        private const float PositionalRandomness = .5f;
-        private const float RotationalRandomness = .1f;
+        public float PositionalRandomness = .5f;
+        public float RotationalRandomness = .1f;
 
         private const float DepthSpacing = .1f;
 
@@ -48,12 +48,9 @@ namespace Assets.Scripts.Player
             switch (game.CurrentState)
             {
                 case TensGame.GameState.Deal:
-                    //var allPlayers = FindObjectsOfType<Player>();
-                    //if (allPlayers.Any(a => a.Dealer) && allPlayers.Single(a => a.Dealer).networkView.isMine && CanAddMore && !Deck.Dealing)
-                    //    networkView.RPC("AddCard", RPCMode.All);
                     break;
                 case TensGame.GameState.Bid:
-                    if (!Player.HasPickedUpCards && !Cards.Any(a => a.Moving))
+                    if (Player.IsLocalPlayer && !Player.HasPickedUpCards && !Cards.Any(a => a.Moving))
                         Player.PickUpHand();
                     break;
                 case TensGame.GameState.HandPlay:
@@ -76,7 +73,7 @@ namespace Assets.Scripts.Player
                 card.MoveTo(transform.position + new Vector3(Util.NextGaussian(PositionalRandomness), Util.NextGaussian(PositionalRandomness), -DepthSpacing * (Cards.Count + 1)));
                 card.RotateTo(Util.NextGaussian(RotationalRandomness) * 180, false, false);
                 Cards.Add(card);
-                card.transform.parent = transform;
+                //card.transform.parent = transform;
             }
         }
 

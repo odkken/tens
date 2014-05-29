@@ -39,21 +39,29 @@ namespace Assets.Scripts.Cards
             enabled = false;
         }
 
+
         void OnMouseDown()
         {
-            if (!IsFaceUp || !Owner.IsLocalPlayer) return;
-            _initClickOffset = Input.mousePosition - Camera.main.WorldToScreenPoint(transform.position);
-            RotateTo(Mathf.Abs(transform.rotation.eulerAngles.z - 180) < 90 ? 180 : 0, true, false);
+            if (Owner.IsLocalPlayer && IsFaceUp)
+                Owner.OnCardClicked(GetComponent<Card>());
         }
 
-        void OnMouseDrag()
-        {
-            if (!IsFaceUp || !Owner.IsLocalPlayer) return;
-            Moving = true;
-            var newPos = Camera.main.ScreenToWorldPoint(Input.mousePosition - _initClickOffset);
-            newPos.z = transform.position.z;
-            transform.position = newPos;
-        }
+        //for sliding the thing around
+        //void OnMouseDown()
+        //{
+        //    if (!IsFaceUp || !Owner.IsLocalPlayer) return;
+        //    _initClickOffset = Input.mousePosition - Camera.main.WorldToScreenPoint(transform.position);
+        //    RotateTo(Mathf.Abs(transform.rotation.eulerAngles.z - 180) < 90 ? 180 : 0, true, false);
+        //}
+
+        //void OnMouseDrag()
+        //{
+        //    if (!IsFaceUp || !Owner.IsLocalPlayer) return;
+        //    Moving = true;
+        //    var newPos = Camera.main.ScreenToWorldPoint(Input.mousePosition - _initClickOffset);
+        //    newPos.z = transform.position.z;
+        //    transform.position = newPos;
+        //}
 
         void OnMouseUp()
         {
@@ -128,23 +136,30 @@ namespace Assets.Scripts.Cards
         IEnumerator AnimateFlip(float flipTime)
         {
             Flipping = true;
-            var startAngle = transform.rotation.eulerAngles.y;
-            var endAngle = Math.Abs(startAngle - 180) < 90 ? 0 : 180;
+            var startRot = transform.rotation;
+            var dummyObject = new GameObject();
+            dummyObject.transform.rotation = startRot;
+            dummyObject.transform.RotateAround(dummyObject.transform.position, dummyObject.transform.up, 180);
+            var endRot = dummyObject.transform.rotation;
             var time = 0f;
             while (time < 1)
             {
                 time += Time.deltaTime / flipTime;
-                transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, Mathf.Lerp(startAngle, endAngle, Mathf.Pow(time, 2)), transform.rotation.eulerAngles.z);
+                transform.rotation = Quaternion.Slerp(startRot, endRot, Mathf.Pow(time, 2));
                 yield return null;
             }
-            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, endAngle, transform.rotation.eulerAngles.z);
+            Destroy(dummyObject);
+            transform.rotation = endRot;
             Flipping = false;
         }
 
         public void MoveTo(Vector3 to)
         {
             if (!Moving)
+            {
+                Moving = true;
                 StartCoroutine(AnimateMove(to, AnimTime));
+            }
         }
 
         IEnumerator AnimateMove(Vector3 newPosition, float flipTime)
@@ -162,33 +177,51 @@ namespace Assets.Scripts.Cards
             Moving = false;
         }
 
+        public void RotateToQuat(Quaternion newRotation)
+        {
+            if (!Rotating)
+            {
+                Rotating = true;
+                StartCoroutine(AnimateRotateQuat(newRotation, AnimTime));
+            }
+        }
+
+        IEnumerator AnimateRotateQuat(Quaternion newRotation, float flipTime)
+        {
+            Rotating = true;
+            var time = 0f;
+            var startRot = transform.rotation;
+            var endRot = newRotation;
+            while (time < 1)
+            {
+                time += Time.deltaTime / flipTime;
+                transform.rotation = Quaternion.Slerp(startRot, endRot, Mathf.Log10(time * 9 + 1));
+                yield return null;
+            }
+            Rotating = false;
+        }
+
         public void RotateTo(float angle, bool shortestPath, bool flip)
         {
             if (!Rotating)
+            {
+                Rotating = true;
                 StartCoroutine(AnimateRotate(angle, AnimTime, shortestPath, flip));
+            }
         }
         IEnumerator AnimateRotate(float to, float flipTime, bool shortestPath, bool flip)
         {
             Rotating = true;
             var time = 0f;
 
-            if (shortestPath && flip)
-            {
-                var startRot = transform.rotation;
-                var endRot = Quaternion.Euler(startRot.x, startRot.y, to);
-                while (time < 1)
-                {
-                    time += Time.deltaTime / flipTime;
-                    transform.rotation = Quaternion.Slerp(startRot, endRot, Mathf.Log10(time * 9 + 1));
-                    yield return null;
-                }
-            }
-            else if (shortestPath)
+            if (shortestPath)
             {
                 var startRot = transform.rotation;
                 var dummyObject = new GameObject();
                 dummyObject.transform.rotation = startRot;
                 dummyObject.transform.Rotate(0, 0, to - startRot.eulerAngles.z);
+                if (flip)
+                    dummyObject.transform.RotateAround(dummyObject.transform.position, dummyObject.transform.up, 180);
                 var endRot = dummyObject.transform.rotation;
                 while (time < 1)
                 {

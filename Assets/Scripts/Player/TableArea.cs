@@ -25,6 +25,7 @@ namespace Assets.Scripts.Player
         }
         private TensGame game;
         public Player Player { get; private set; }
+        public List<Card> Cards;
 
         public bool CanAddMore { get { return _topCards.Count < 5; } }
 
@@ -71,7 +72,6 @@ namespace Assets.Scripts.Player
                 card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -10);
                 card.MoveTo(transform.position + new Vector3(_horizontalSpacing * (-2 + _bottomCards.Count), _verticalOffset / 2, FaceDownZPos));
                 _bottomCards.Add(card);
-                card.transform.parent = transform;
             }
             else if (_topCards.Count < 5)
             {
@@ -79,8 +79,8 @@ namespace Assets.Scripts.Player
                 card.Flip();
                 card.MoveTo(transform.position + new Vector3(_horizontalSpacing * (-2 + _topCards.Count), -_verticalOffset / 2, FaceUpZPos));
                 _topCards.Add(card);
-                card.transform.parent = transform;
             }
+            Cards.Add(card);
         }
 
 

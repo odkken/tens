@@ -41,9 +41,14 @@ namespace Assets.Scripts.Common
             theList[indexB] = tmp;
         }
 
+        public static T Next<T>(this IList<T> theList, int currentIndex)
+        {
+            return currentIndex == theList.Count - 1 ? theList[0] : theList[currentIndex + 1];
+        }
+
         public static float NextGaussian(float stdDev, float mean = 0)
         {
-            if(rand == null)
+            if (rand == null)
                 rand = new System.Random(); //reuse this if you are generating many
             double u1 = rand.NextDouble(); //these are uniform(0,1) random doubles
             double u2 = rand.NextDouble();

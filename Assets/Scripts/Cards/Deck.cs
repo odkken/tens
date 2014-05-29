@@ -18,10 +18,10 @@ namespace Assets.Scripts.Cards
             get { return _cards ?? (_cards = GetComponentsInChildren<Card>().ToList()); }
         }
         public int CardsLeft { get { return Cards != null ? Cards.Count : 0; } }
-        public float DealTime = 1f;
+        public float DealTime = 5f;
         private const float CardSpacing = .01f;
         public bool Dealing { get; private set; }
-        public int shuffleSeed;
+        public int[] shuffleSeeds;
         public bool DoneDealing { get; private set; }
         public bool Shuffled;
         private TensGame game;
@@ -48,7 +48,6 @@ namespace Assets.Scripts.Cards
                         transform.position = new Vector3(-999, -999, -999);
                         Dealing = false;
                         DoneDealing = true;
-                        game.SetGameState((int)TensGame.GameState.Bid);
                     }
 
                     break;
@@ -78,7 +77,10 @@ namespace Assets.Scripts.Cards
         [RPC]
         private void Deal()
         {
-            Shuffle(shuffleSeed);
+            foreach (var seed in shuffleSeeds)
+            {
+                Shuffle(seed);
+            }
             Dealing = true;
             StartCoroutine(AnimateDeal(DealTime));
         }
@@ -104,14 +106,14 @@ namespace Assets.Scripts.Cards
             Dealing = false;
         }
 
-        public void SetSeed(int seed)
+        public void SetSeeds(int[] seeds)
         {
-            networkView.RPC("SetSeedRPC", RPCMode.AllBuffered, shuffleSeed);
+            networkView.RPC("SetSeedsRPC", RPCMode.AllBuffered, seeds);
         }
         [RPC]
-        private void SetSeedRPC(int seed)
+        private void SetSeedsRPC(int[] seeds)
         {
-            shuffleSeed = seed;
+            shuffleSeeds = seeds;
         }
 
         public void Shuffle(int seed)
