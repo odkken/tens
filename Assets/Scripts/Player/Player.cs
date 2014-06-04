@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Threading;
 using Assets.Scripts.Cards;
 using Assets.Scripts.Game;
@@ -11,11 +12,16 @@ namespace Assets.Scripts.Player
 {
     public class Player : MonoBehaviour
     {
+
+        public Rect PlusRect;
+        public Rect MinusRect;
+        public Rect BidRect;
+        public Rect PassRect;
+
         public HandArea Hand { get; private set; }
         public TableArea Table { get; private set; }
 
         private TensGame _game;
-
         public TensGame Game
         {
             get { return _game ?? (_game = FindObjectOfType<TensGame>()); }
@@ -27,7 +33,8 @@ namespace Assets.Scripts.Player
         public string NetworkId;
 
         public int Points { get; private set; }
-        public int Bid { get; private set; }
+
+        public List<Card> WonCards { get; private set; }
 
         private Deck _deck;
         private Deck Deck
@@ -39,20 +46,33 @@ namespace Assets.Scripts.Player
             }
         }
         public int Number;
-        public bool HasPickedUpCards { get; private set; }
+        public bool IsLocalPlayer = false;
 
         public float HandSpread = .7f;
-        public float HandRotation = 2;
 
         public bool CanAddMore { get { return Hand.CanAddMore || Table.CanAddMore; } }
 
+
         public bool Dealer = false;
-        public bool IsLocalPlayer = false;
+        public bool HasPickedUpCards { get; private set; }
+        public bool KeptBid;
+        public int Bid { get; private set; }
+        private int _minBid = 50;
 
 
         // Use this for initialization
         void Start()
         {
+            _minBid = 50;
+            Bid = 50;
+            var sWidth = Screen.width;
+            var sHeight = Screen.height;
+            var bidWith = 200f;
+            var bidHeight = 100f;
+            BidRect = new Rect((sWidth - bidWith) * .5f, (sHeight - bidHeight) * .5f, bidWith, bidHeight);
+            PlusRect = new Rect(BidRect.xMin - bidWith / 2, BidRect.yMin, bidWith / 2, bidHeight / 2);
+            MinusRect = new Rect(PlusRect.xMin, PlusRect.yMax, bidWith / 2, bidHeight / 2);
+            PassRect = new Rect(BidRect.xMax, BidRect.yMin, bidWith, bidHeight);
             Debug.Log("Spawning on " + (UnityEngine.Network.isServer ? "Server" : "Client") + " " + networkView.viewID);
             Game.AllPlayers.Add(GetComponent<Player>());
             Number = _playerNumber++;
@@ -63,6 +83,7 @@ namespace Assets.Scripts.Player
                     tf.position = new Vector3(tf.position.x, -tf.position.y, tf.position.z);
                 }
             }
+            WonCards = new List<Card>();
             Hand = GetComponentInChildren<HandArea>();
             Table = GetComponentInChildren<TableArea>();
         }
@@ -126,6 +147,7 @@ namespace Assets.Scripts.Player
             var i = 0;
             foreach (var card in FindObjectsOfType<Card>().Where(a => cardInts.Contains(a.ToInt())))
             {
+                WonCards.Add(card);
                 card.MoveTo(Hand.transform.position + new Vector3(Util.NextGaussian(Hand.PositionalRandomness), Util.NextGaussian(Hand.PositionalRandomness), -(i + 1) * .5f));
                 card.RotateTo(Util.NextGaussian(Hand.RotationalRandomness) * 180, true, true);
                 ++i;
@@ -230,7 +252,72 @@ namespace Assets.Scripts.Player
 
         public void AddPoints(int points)
         {
+            networkView.RPC("AddPointsRPC", RPCMode.AllBuffered, points);
+        }
+        [RPC]
+        private void AddPointsRPC(int points)
+        {
             Points += points;
+        }
+
+        [RPC]
+        private void SetBidRPC(int bid)
+        {
+            MyTurn = false;
+            Game.AllPlayers.Next(Game.AllPlayers.IndexOf(this)).MyTurn = true;
+            Bid = bid;
+            foreach (var player in Game.AllPlayers.Where(a => a != this))
+            {
+                player.KeptBid = false;
+                player._minBid = bid + 5;
+                player.Bid = bid + 5;
+            }
+            KeptBid = true;
+        }
+
+        [RPC]
+        private void PassRPC()
+        {
+            MyTurn = false;
+            Game.AllPlayers.Single(a => a.KeptBid).MyTurn = true;
+            Game.SetGameState((int)TensGame.GameState.HandPlay);
+        }
+
+        void OnGUI()
+        {
+            if (!IsLocalPlayer) return;
+            if (Game.CurrentState == TensGame.GameState.Bid && Game.AllPlayers.All(a => a.HasPickedUpCards))
+            {
+                GUI.enabled = MyTurn;
+                var buttonStyle = GUI.skin.button;
+                buttonStyle.fontSize = 50;
+                if (GUI.Button(PlusRect, "+", buttonStyle))
+                {
+                    if (Bid < 100)
+                        Bid += 5;
+                    return;
+                }
+                if (GUI.Button(MinusRect, "-", buttonStyle))
+                {
+                    if (Bid > _minBid)
+                        Bid -= 5;
+                    return;
+                }
+                if (GUI.Button(BidRect, "Bid: " + Bid, buttonStyle))
+                {
+                    networkView.RPC("SetBidRPC", RPCMode.AllBuffered, Bid);
+                    return;
+                }
+                if (GUI.Button(PassRect, "Pass", buttonStyle))
+                {
+                    networkView.RPC("PassRPC", RPCMode.AllBuffered);
+                }
+            }
+            var scoreWidth = 200f;
+            var scoreHeight = 100f;
+            var labelStyle = GUI.skin.label;
+            labelStyle.fontSize = 50;
+            GUI.Label(new Rect((Screen.width - scoreWidth) / 2, Screen.height - scoreHeight, scoreWidth, scoreHeight), "Score: " + Points, labelStyle);
         }
 
     }

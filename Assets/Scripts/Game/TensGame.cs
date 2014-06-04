@@ -60,25 +60,39 @@ namespace Assets.Scripts.Game
                         SetGameState((int)GameState.Bid);
                     break;
                 case GameState.Bid:
-                    if (AllPlayers.All(a => a.HasPickedUpCards))
-                        SetGameState((int)GameState.HandPlay);
                     break;
                 case GameState.HandPlay:
                     break;
                 case GameState.TablePlay:
-                    if (!AllPlayers.SelectMany(a => a.Hand.Cards.Concat(a.Table.Cards)).Any())
-                    {
-                        //tally up scores
-                    }
-
-                    else if (CardsPlayedThisRound.Count == 4 && Time.time - TimeLastCardPlayed > (Card.AnimTime * 2))
+                    if (CardsPlayedThisRound.Count == 4 && Time.time - TimeLastCardPlayed > (Card.AnimTime * 2))
                     {
                         var winner = GetRoundWinner(CardsPlayedThisRound);
                         winner.AwardCards(CardsPlayedThisRound);
                         winner.SetMyTurn();
-                        CardsPlayedThisRound = new List<Card>();
-                        SetGameState((int)GameState.HandPlay);
-                        networkView.RPC("UncoverCardsRPC", RPCMode.AllBuffered);
+                        if (!AllPlayers.SelectMany(a => a.Hand.Cards.Concat(a.Table.Cards)).Any())
+                        {
+                            for (int i = 0; i < AllPlayers.Count; i++)
+                            {
+                                var thisPlayer = AllPlayers[i];
+                                if (thisPlayer.Dealer)
+                                {
+                                    thisPlayer.Dealer = false;
+                                    AllPlayers.Next(i).Dealer = true;
+                                }
+
+                                var pointsMade = thisPlayer.WonCards.Sum(a => a.Pointvalue);
+                                if (thisPlayer.KeptBid)
+                                    thisPlayer.AddPoints(pointsMade >= thisPlayer.Bid ? pointsMade : -thisPlayer.Bid);
+                                else
+                                    thisPlayer.AddPoints(pointsMade);
+                            }
+                            SetGameState((int)GameState.Deal);
+                        }
+                        else
+                        {
+                            SetGameState((int)GameState.HandPlay);
+                            networkView.RPC("UncoverCardsRPC", RPCMode.AllBuffered);
+                        }
                     }
                     break;
                 default:
@@ -117,7 +131,6 @@ namespace Assets.Scripts.Game
         public void PlayCard(Card card)
         {
             TimeLastCardPlayed = Time.time;
-            CardsPlayedThisRound.Add(card);
             if (CardsPlayedThisHand.Count == 0)
             {
                 SetTrumpSuit(card.Suit);
@@ -131,13 +144,18 @@ namespace Assets.Scripts.Game
         private void SetTrumpSuit(CardSuit suit)
         {
             TrumpSuit = suit;
-            var spriteRenderers = GameObject.Find("TrumpGraphic").GetComponentsInChildren<SpriteRenderer>();
+            var trumpGraphic = GameObject.Find("TrumpGraphic");
+            var spriteRenderers = trumpGraphic.GetComponentsInChildren<SpriteRenderer>();
             foreach (var spriteRenderer in spriteRenderers)
             {
-                spriteRenderer.transform.RotateAround(spriteRenderer.transform.position, Vector3.forward, Vector3.Angle(Camera.main.transform.up, spriteRenderer.transform.up));
                 spriteRenderer.enabled = true;
                 spriteRenderer.sprite = Resources.LoadAll<Sprite>("playing_card_suits")[((int)TrumpSuit == 3) ? 2 : ((int)TrumpSuit == 2) ? 3 : (int)TrumpSuit];
             }
+        }
+
+        private void SetTrumpRPC(int suit)
+        {
+            
         }
 
         private void ClearTrumpSuit()
@@ -182,7 +200,7 @@ namespace Assets.Scripts.Game
 
         public void SetGameState(int state)
         {
-            networkView.RPC("SetGameStateRPC", RPCMode.AllBuffered, state);
+            networkView.RPC("SetGameStateRPC", RPCMode.AllBuffered, (int)state);
         }
         [RPC]
         private void SetGameStateRPC(int state)
@@ -191,6 +209,7 @@ namespace Assets.Scripts.Game
             switch (CurrentState)
             {
                 case GameState.Deal:
+                    CardsPlayedThisHand = new List<Card>();
                     break;
                 case GameState.Bid:
                     break;

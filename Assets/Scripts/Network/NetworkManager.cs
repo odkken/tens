@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using Assets.Scripts.Common;
 using Assets.Scripts.Game;
@@ -45,12 +47,14 @@ namespace Assets.Scripts.Network
         {
             if (!UnityEngine.Network.isServer || gameStarted || NetworkPlayers.Count != MaxPlayers) return;
             gameStarted = true;
-            //NetworkPlayers.Shuffle(UnityEngine.Random.Range(0, 255));
+
+            //this'll shuffle the deck 8 times with "true" random seeds on each shuffle.  should cover all 52! deck permutations
+            var randomBytes = new byte[32];
+            RandomNumberGenerator.Create().GetBytes(randomBytes);
             var seeds = new List<int>();
-            var rng = new System.Random((int)Time.time);
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < randomBytes.Count(); i += 4)
             {
-                seeds.Add(rng.Next());
+                seeds.Add(BitConverter.ToInt32(randomBytes, i));
             }
             networkView.RPC("SpawnPlayers", RPCMode.AllBuffered, string.Join(",", NetworkPlayers.Select(a => a.ToString()).ToArray()), seeds.ToArray());
         }

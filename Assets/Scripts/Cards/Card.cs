@@ -19,7 +19,13 @@ namespace Assets.Scripts.Cards
 
         public string Name { get; private set; }
 
-        private Vector3 _initClickOffset;
+        public int Pointvalue
+        {
+            get
+            {
+                return Rank == CardRank.Ace || Rank == CardRank.Ten ? 10 : Rank == CardRank.Five ? 5 : 0;
+            }
+        }
 
         public bool Flipping { get; private set; }
         public bool Moving { get; private set; }
