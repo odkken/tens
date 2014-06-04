@@ -101,8 +101,8 @@ namespace Assets.Scripts.Player
 
         public void OnCardClicked(Card card)
         {
-            if (!MyTurn) return;
-            var canPlay = false;
+            if (!MyTurn || !IsLocalPlayer) return;
+            bool canPlay;
             if (!Game.CardsPlayedThisRound.Any())
                 canPlay = true;
             else if (card.Suit == Game.CardsPlayedThisRound.First().Suit)
