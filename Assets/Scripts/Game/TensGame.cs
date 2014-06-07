@@ -136,6 +136,7 @@ namespace Assets.Scripts.Game
                 SetTrumpSuit(card.Suit);
             }
             CardsPlayedThisHand.Add(card);
+            CardsPlayedThisRound.Add(card);
             card.MoveTo(Camera.main.transform.right * (CardsPlayedThisRound.Count - 2.5f) + new Vector3(0, 0, CardsPlayedThisRound.Count + 1) * -1);
             if (!card.IsFaceUp)
                 card.Flip();
@@ -155,7 +156,7 @@ namespace Assets.Scripts.Game
 
         private void SetTrumpRPC(int suit)
         {
-            
+
         }
 
         private void ClearTrumpSuit()
